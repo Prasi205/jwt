@@ -15,6 +15,7 @@ import com.tm.jsonwebtoken.repository.TokenDetailsRepository;
 import com.tm.jsonwebtoken.repository.TransacTokenDetailsRepository;
 import com.tm.jsonwebtoken.request.RefreshTokenRequest;
 import com.tm.jsonwebtoken.request.TokenGenerationRequest;
+import com.tm.jsonwebtoken.request.TokenValidationRequest;
 import com.tm.jsonwebtoken.response.TokenGenerationResponse;
 import com.tm.jsonwebtoken.service.JwtService;
 import com.tm.jsonwebtoken.util.JwtUtil;
@@ -119,6 +120,24 @@ public class JwtServiceImpl implements JwtService {
 		}
 	}
 
+	/**This method is used to validate the token is expiry or not
+	 * @param tokenValidationRequest
+	 * @return boolean
+	 */
+	public boolean validateToken(TokenValidationRequest tokenValidationRequest) {
+		logger.info("Received the request to validate the access token");
+		boolean isAccessTokenvalid;
+		try {
+			logger.info("Check the accesstoken is expired or not");
+			isAccessTokenvalid= jwtUtil.isValidAccessToken(tokenValidationRequest.getAccessToken(),
+					tokenValidationRequest.getUniqueId(), tokenValidationRequest.getSecretKey());
+		} catch (Exception e) {
+			logger.error("Unable to validate token");
+			throw new CustomJwtException("Unable to validate token");
+		}
+		return isAccessTokenvalid;
+	}
+	
 	/**This method is used to generate the new access and refresh token
 	 * @param refreshTokenRequest
 	 * @return RefreshTokenPOJO

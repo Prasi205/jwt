@@ -13,6 +13,7 @@ import com.tm.jsonwebtoken.exception.CustomJwtException;
 import com.tm.jsonwebtoken.pojo.RefreshTokenPOJO;
 import com.tm.jsonwebtoken.request.RefreshTokenRequest;
 import com.tm.jsonwebtoken.request.TokenGenerationRequest;
+import com.tm.jsonwebtoken.request.TokenValidationRequest;
 import com.tm.jsonwebtoken.response.JwtResponsePOJO;
 import com.tm.jsonwebtoken.response.TokenGenerationResponse;
 import com.tm.jsonwebtoken.service.JwtService;
@@ -49,6 +50,24 @@ public class JwtController {
 		return jwtResponsePOJO;	
 	}
 
+	/**Handles the token validation expiration based on the received request.
+	 * @param tokenValidationRequest
+	 * @return boolean
+	 */
+	@PostMapping("/validateToken")
+	public boolean validateToken(@RequestBody TokenValidationRequest tokenValidationRequest) {
+		logger.info("Received request to validate the token is expiry or not");
+		boolean isAccessTokenExpired;
+		try {
+			logger.info("Token validation request is received");
+		    isAccessTokenExpired=jwtService.validateToken(tokenValidationRequest);
+		} catch (Exception e) {
+			logger.error("Unable to received the token validation request");
+			throw new CustomJwtException("Unable to received the token validation request");
+		}
+		return isAccessTokenExpired;
+	}
+	
 	/**Handles the new access and refresh token generation based on the received request
 	 * @param refreshTokenRequest
 	 * @return JwtResponsePOJO
