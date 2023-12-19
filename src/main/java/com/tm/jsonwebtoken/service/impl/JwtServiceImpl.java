@@ -152,7 +152,7 @@ public class JwtServiceImpl implements JwtService {
 			boolean isAccessTokenvalid = jwtUtil.isValidAccessToken(refreshTokenRequest.getAccessToken(),
 					refreshTokenRequest.getUniqueId(), refreshTokenRequest.getSecretKey());
 			if (!isAccessTokenvalid) {
-				logger.info("Given details are valid, So regenrate tokens and return in response");
+				logger.info("Token is expired, So regenrate tokens and return in response");
 				TokenGenerationRequest tokenGenerationRequest = new TokenGenerationRequest();
 				tokenGenerationRequest.setUniqueId(refreshTokenRequest.getUniqueId());
 				tokenGenerationRequest.setSecretKey(refreshTokenRequest.getSecretKey());
@@ -163,8 +163,8 @@ public class JwtServiceImpl implements JwtService {
 				refreshTokenResponse.setAccessToken(generateToken.getAccessToken());
 				refreshTokenResponse.setRefreshToken(generateToken.getRefreshToken());
 			} else {
-				logger.error("Token is expired");
-				throw new CustomJwtException("Token is expired");
+				logger.error("Token is not expired");
+				throw new CustomJwtException("Token is not expired");
 			}
 
 		} catch (Exception e) {
