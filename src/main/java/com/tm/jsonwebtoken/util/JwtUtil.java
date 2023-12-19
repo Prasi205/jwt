@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.tm.jsonwebtoken.entity.TokenDetails;
+import com.tm.jsonwebtoken.exception.CustomJwtException;
 import com.tm.jsonwebtoken.repository.TokenDetailsRepository;
 import com.tm.jsonwebtoken.request.TokenGenerationRequest;
 
@@ -44,17 +45,16 @@ public class JwtUtil {
 			Map<String, Object> claims = new HashMap<>();
 
 			logger.info("Access token is successfully generated");
-			
+
 			return Jwts.builder().setClaims(claims).setSubject(tokenGenerationRequest.getUniqueId())
 					.setIssuedAt(new Date(System.currentTimeMillis()))
 					.setExpiration(new Date(System.currentTimeMillis() + tokenGenerationRequest.getAccessTokenTime()))
-					.signWith(SignatureAlgorithm.HS512, tokenGenerationRequest.getSecretKey())
-					.compact();
+					.signWith(SignatureAlgorithm.HS512, tokenGenerationRequest.getSecretKey()).compact();
 		} catch (Exception e) {
 			logger.error("Unable to generate the access token");
 			return "Unable to generate access token";
 		}
-		
+
 	}
 
 	/**
@@ -72,8 +72,7 @@ public class JwtUtil {
 			return Jwts.builder().setClaims(claims).setSubject(tokenGenerationRequest.getUniqueId())
 					.setIssuedAt(new Date(System.currentTimeMillis()))
 					.setExpiration(new Date(System.currentTimeMillis() + tokenGenerationRequest.getRefreshTokenTime()))
-					.signWith(SignatureAlgorithm.HS512, tokenGenerationRequest.getSecretKey())
-					.compact();
+					.signWith(SignatureAlgorithm.HS512, tokenGenerationRequest.getSecretKey()).compact();
 		} catch (Exception e) {
 			logger.error("Unable to generate the refresh token");
 			return "Unable to generate refresh token";
@@ -91,33 +90,42 @@ public class JwtUtil {
 	 */
 	public boolean isValidAccessToken(String accessToken, String uniqueId, String secretKey) {
 		logger.info("Received the request to validate the access token is expired or not");
+		boolean isAccessTokenValid = false;
 		try {
 			logger.info("Received the request to get the token details based on uniqueId and access token");
 			TokenDetails existingTokenDetails = tokenDetailsRepository.findByUniqueIdAndAccessToken(uniqueId,
 					accessToken);
 			if (Objects.nonNull(existingTokenDetails)) {
-				logger.info("Validate expiration time of the access token");
-				isAccessTokenExpired(secretKey, existingTokenDetails);
-				logger.info("Valid User and Token");
-				return true;
+				logger.info("Check the expiration for access token");
+				isAccessTokenValid=isAccessTokenExpired(secretKey, existingTokenDetails);
 			} else {
 				logger.error("Invalid User and Token");
 				return false;
 			}
-		}catch (Exception exception) {
+		} catch (Exception exception) {
 			logger.error("Unable to validate access token");
-			return false;
+			throw new CustomJwtException("Unable to validate access token");
 		}
+		return isAccessTokenValid;
 	}
 
-	private void isAccessTokenExpired(String secretKey, TokenDetails existingTokenDetails) {
+	/**
+	 * This method is used to check the access token is expired or not
+	 * 
+	 * @param secretKey
+	 * @param existingTokenDetails
+	 * @return String
+	 */
+	public boolean isAccessTokenExpired(String secretKey, TokenDetails existingTokenDetails) {
 		logger.info("Received the request to validate the access token");
 		try {
 			Jwts.parser().setSigningKey(secretKey).parseClaimsJws(existingTokenDetails.getAccessToken()).getBody();
 			logger.info("Access token is not expired");
+			return true;
 		} catch (ExpiredJwtException expiredJwtException) {
 			logger.error("Access token is expired");
+			return false;
 		}
 	}
-	
+
 }

@@ -3,6 +3,8 @@ package com.tm.jsonwebtoken.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,17 +57,19 @@ public class JwtController {
 	 * @return boolean
 	 */
 	@PostMapping("/validateToken")
-	public boolean validateToken(@RequestBody TokenValidationRequest tokenValidationRequest) {
-		logger.info("Received request to validate the token is expiry or not");
-		boolean isAccessTokenExpired;
-		try {
-			logger.info("Token validation request is received");
-		    isAccessTokenExpired=jwtService.validateToken(tokenValidationRequest);
-		} catch (Exception e) {
-			logger.error("Unable to received the token validation request");
-			throw new CustomJwtException("Unable to received the token validation request");
-		}
-		return isAccessTokenExpired;
+	public ResponseEntity<String> validateTokenController(@RequestBody TokenValidationRequest tokenValidationRequest) {
+	    try {
+	        boolean isAccessTokenValid = jwtService.validateToken(tokenValidationRequest);
+	        if (isAccessTokenValid) {
+	        	logger.info("Access token is valid");
+	            return ResponseEntity.ok("Access token is valid");
+	        } else {
+	        	logger.error("Access Token is invalid");
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access token is invalid");
+	        }
+	    } catch (CustomJwtException e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to validate token");
+	    }
 	}
 	
 	/**Handles the new access and refresh token generation based on the received request

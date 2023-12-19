@@ -126,16 +126,16 @@ public class JwtServiceImpl implements JwtService {
 	 */
 	public boolean validateToken(TokenValidationRequest tokenValidationRequest) {
 		logger.info("Received the request to validate the access token");
-		boolean isAccessTokenvalid;
+		boolean isAccessTokenValid = false;
 		try {
 			logger.info("Check the accesstoken is expired or not");
-			isAccessTokenvalid= jwtUtil.isValidAccessToken(tokenValidationRequest.getAccessToken(),
+			isAccessTokenValid= jwtUtil.isValidAccessToken(tokenValidationRequest.getAccessToken(),
 					tokenValidationRequest.getUniqueId(), tokenValidationRequest.getSecretKey());
 		} catch (Exception e) {
 			logger.error("Unable to validate token");
 			throw new CustomJwtException("Unable to validate token");
 		}
-		return isAccessTokenvalid;
+		return isAccessTokenValid;
 	}
 	
 	/**This method is used to generate the new access and refresh token
@@ -146,11 +146,12 @@ public class JwtServiceImpl implements JwtService {
 	public RefreshTokenPOJO regenerateTokens(RefreshTokenRequest refreshTokenRequest) {
 		logger.info("Received the request to validate the access and refresh token");
 		RefreshTokenPOJO refreshTokenResponse = new RefreshTokenPOJO();
+
 		try {
 			logger.info("Check the access token is expired or not");
 			boolean isAccessTokenvalid = jwtUtil.isValidAccessToken(refreshTokenRequest.getAccessToken(),
 					refreshTokenRequest.getUniqueId(), refreshTokenRequest.getSecretKey());
-			if (isAccessTokenvalid) {
+			if (!isAccessTokenvalid) {
 				logger.info("Given details are valid, So regenrate tokens and return in response");
 				TokenGenerationRequest tokenGenerationRequest = new TokenGenerationRequest();
 				tokenGenerationRequest.setUniqueId(refreshTokenRequest.getUniqueId());
@@ -162,8 +163,8 @@ public class JwtServiceImpl implements JwtService {
 				refreshTokenResponse.setAccessToken(generateToken.getAccessToken());
 				refreshTokenResponse.setRefreshToken(generateToken.getRefreshToken());
 			} else {
-				logger.error("Refresh token is expired");
-				throw new CustomJwtException("Refresh Token is expired");
+				logger.error("Token is expired");
+				throw new CustomJwtException("Token is expired");
 			}
 
 		} catch (Exception e) {
