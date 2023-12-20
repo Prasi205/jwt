@@ -20,10 +20,7 @@ import com.tm.jsonwebtoken.response.JwtResponsePOJO;
 import com.tm.jsonwebtoken.response.TokenGenerationResponse;
 import com.tm.jsonwebtoken.service.JwtService;
 
-/**
- * Controller class for handling JSON web token generation and validation
- * requests.
- */
+/**Controller class for handling JSON web token generation and validation requests. */
 @RestController
 @RequestMapping(value = "/jwt")
 public class JwtController {
@@ -64,10 +61,11 @@ public class JwtController {
 	        	logger.info("Access token is valid");
 	            return ResponseEntity.ok("Access token is valid");
 	        } else {
-	        	logger.error("Access Token is invalid");
+	        	logger.error("Invalid user and Token");
 	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access token is invalid");
 	        }
 	    } catch (CustomJwtException e) {
+	    	logger.error("Unable to validate token");
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to validate token");
 	    }
 	}

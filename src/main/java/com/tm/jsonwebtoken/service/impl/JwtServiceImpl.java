@@ -41,8 +41,8 @@ public class JwtServiceImpl implements JwtService {
 
 	Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
 
-	/**This method is used to get the access and refresh token from jwt util class
-	 * method and pass the access token and refresh token in db storing process
+	/**This method is used to get the access and refresh token from jwt util class method and pass the access
+	 *  token and refresh token in db storing process
 	 * @param tokenGenerationRequest
 	 * @return TokenGenerationResponse
 	 */
@@ -64,9 +64,7 @@ public class JwtServiceImpl implements JwtService {
 		
 	}
 	
-	/**This method is used to save the token details with created date and updated
-	 * date in database
-	 * 
+	/**This method is used to save the token details with created date and updated date in database
 	 * @param uniqueId
 	 * @param accessToken
 	 * @param refreshToken
@@ -102,6 +100,12 @@ public class JwtServiceImpl implements JwtService {
 	}
 
 	
+	/**This method is used to save the transaction token details in database
+	 * @param uniqueId
+	 * @param accessToken
+	 * @param refreshToken
+	 * @throws CustomJwtException
+	 */
 	public void saveTransactionTokenDetails(String uniqueId, String accessToken, String refreshToken) throws CustomJwtException {
 		logger.info("Received the request to save the transaction token details");
 		try {
@@ -140,8 +144,7 @@ public class JwtServiceImpl implements JwtService {
 	
 	/**This method is used to generate the new access and refresh token
 	 * @param refreshTokenRequest
-	 * @return RefreshTokenPOJO
-	 * @throws Exception 
+	 * @return RefreshTokenPOJO 
 	 */
 	public RefreshTokenPOJO regenerateTokens(RefreshTokenRequest refreshTokenRequest) {
 		logger.info("Received the request to validate the access and refresh token");
