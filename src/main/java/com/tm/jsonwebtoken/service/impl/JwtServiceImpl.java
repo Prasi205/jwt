@@ -10,13 +10,12 @@ import org.springframework.stereotype.Service;
 import com.tm.jsonwebtoken.entity.TokenDetails;
 import com.tm.jsonwebtoken.entity.TransacTokenDetails;
 import com.tm.jsonwebtoken.exception.CustomJwtException;
-import com.tm.jsonwebtoken.pojo.RefreshTokenPOJO;
+import com.tm.jsonwebtoken.pojo.TokenGenerationPOJO;
 import com.tm.jsonwebtoken.repository.TokenDetailsRepository;
 import com.tm.jsonwebtoken.repository.TransacTokenDetailsRepository;
 import com.tm.jsonwebtoken.request.RefreshTokenRequest;
 import com.tm.jsonwebtoken.request.TokenGenerationRequest;
 import com.tm.jsonwebtoken.request.TokenValidationRequest;
-import com.tm.jsonwebtoken.response.TokenGenerationResponse;
 import com.tm.jsonwebtoken.service.JwtService;
 import com.tm.jsonwebtoken.util.JwtUtil;
 
@@ -46,8 +45,9 @@ public class JwtServiceImpl implements JwtService {
 	 * @param tokenGenerationRequest
 	 * @return TokenGenerationResponse
 	 */
-	public TokenGenerationResponse generateToken(TokenGenerationRequest tokenGenerationRequest) throws CustomJwtException {
+	public TokenGenerationPOJO generateToken(TokenGenerationRequest tokenGenerationRequest) throws CustomJwtException {
 		logger.info("Received request to get the access token and refresh token");
+		TokenGenerationPOJO tokenGenerationPOJO=new TokenGenerationPOJO();
 		try {
 			logger.info("Get the access and refresh token from util class");
 			String accessToken=jwtUtil.generateAccessToken(tokenGenerationRequest);
@@ -56,7 +56,9 @@ public class JwtServiceImpl implements JwtService {
 			saveTokenDetails(uniqueId, accessToken, refreshToken);
 			saveTransactionTokenDetails(uniqueId, accessToken, refreshToken);
 			logger.info("Display the access and refresh token in response");
-			return new TokenGenerationResponse(accessToken,refreshToken);
+			tokenGenerationPOJO.setAccessToken(accessToken);
+			tokenGenerationPOJO.setRefreshToken(refreshToken);
+			return tokenGenerationPOJO;
 		} catch (Exception e) {
 			logger.error("Unable to get the token details!...");
 			throw new CustomJwtException("Unable to get the token details!..");
@@ -130,46 +132,42 @@ public class JwtServiceImpl implements JwtService {
 	 */
 	public boolean validateToken(TokenValidationRequest tokenValidationRequest) {
 		logger.info("Received the request to validate the access token");
-		boolean isAccessTokenValid = false;
+		boolean isTokenValid = false;
 		try {
 			logger.info("Check the accesstoken is expired or not");
-			isAccessTokenValid= jwtUtil.isValidAccessToken(tokenValidationRequest.getAccessToken(),
-					tokenValidationRequest.getUniqueId(), tokenValidationRequest.getSecretKey());
+			isTokenValid= jwtUtil.validateToken(tokenValidationRequest);
 		} catch (Exception e) {
 			logger.error("Unable to validate token");
 			throw new CustomJwtException("Unable to validate token");
 		}
-		return isAccessTokenValid;
+		return isTokenValid;
 	}
 	
 	/**This method is used to generate the new access and refresh token
 	 * @param refreshTokenRequest
 	 * @return RefreshTokenPOJO 
 	 */
-	public RefreshTokenPOJO regenerateTokens(RefreshTokenRequest refreshTokenRequest) {
+	public TokenGenerationPOJO regenerateTokens(RefreshTokenRequest refreshTokenRequest) {
 		logger.info("Received the request to validate the access and refresh token");
-		RefreshTokenPOJO refreshTokenResponse = new RefreshTokenPOJO();
-
+		TokenGenerationPOJO refreshTokenResponse = new TokenGenerationPOJO();
 		try {
 			logger.info("Check the access token is expired or not");
-			boolean isAccessTokenvalid = jwtUtil.isValidAccessToken(refreshTokenRequest.getAccessToken(),
-					refreshTokenRequest.getUniqueId(), refreshTokenRequest.getSecretKey());
-			if (!isAccessTokenvalid) {
-				logger.info("Token is expired, So regenrate tokens and return in response");
+			boolean isUserAndTokenvalid = jwtUtil.validateUserAndRefreshToken(refreshTokenRequest);
+			if (isUserAndTokenvalid) {
+				logger.info("Token is not expired, So regenrate tokens and return in response");
 				TokenGenerationRequest tokenGenerationRequest = new TokenGenerationRequest();
 				tokenGenerationRequest.setUniqueId(refreshTokenRequest.getUniqueId());
 				tokenGenerationRequest.setSecretKey(refreshTokenRequest.getSecretKey());
 				tokenGenerationRequest.setAccessTokenTime(refreshTokenRequest.getAccessTokenTime());
 				tokenGenerationRequest.setRefreshTokenTime(refreshTokenRequest.getRefreshTokenTime());
 				
-				TokenGenerationResponse generateToken = generateToken(tokenGenerationRequest);
+				TokenGenerationPOJO generateToken = generateToken(tokenGenerationRequest);
 				refreshTokenResponse.setAccessToken(generateToken.getAccessToken());
 				refreshTokenResponse.setRefreshToken(generateToken.getRefreshToken());
 			} else {
-				logger.error("Token is not expired");
-				throw new CustomJwtException("Token is not expired");
+				logger.error("Invalid user and Token");
+				throw new CustomJwtException("Invalid user and Token");
 			}
-
 		} catch (Exception e) {
 			logger.error("Error refreshing token");
 			throw new CustomJwtException("Error refreshing token");

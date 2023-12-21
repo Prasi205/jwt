@@ -1,10 +1,10 @@
 package com.tm.jsonwebtoken.pojo;
 
-public class RefreshTokenPOJO {
+public class TokenGenerationPOJO {
 
 	private String accessToken;
 	private String refreshToken;
-
+	
 	public String getAccessToken() {
 		return accessToken;
 	}

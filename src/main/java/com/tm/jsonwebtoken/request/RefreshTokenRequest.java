@@ -57,5 +57,4 @@ public class RefreshTokenRequest {
 		this.refreshTokenTime = refreshTokenTime;
 	}
 
-	
 }

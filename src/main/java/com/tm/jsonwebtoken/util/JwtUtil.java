@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 import com.tm.jsonwebtoken.entity.TokenDetails;
 import com.tm.jsonwebtoken.exception.CustomJwtException;
 import com.tm.jsonwebtoken.repository.TokenDetailsRepository;
+import com.tm.jsonwebtoken.request.RefreshTokenRequest;
 import com.tm.jsonwebtoken.request.TokenGenerationRequest;
+import com.tm.jsonwebtoken.request.TokenValidationRequest;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -31,9 +33,7 @@ public class JwtUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
-	/**
-	 * This method is used to generate the access token with expiry date
-	 * 
+	/**This method is used to generate the access token with expiry date
 	 * @param uniqueId
 	 * @param secretKey
 	 * @param accessTokenTime
@@ -57,9 +57,7 @@ public class JwtUtil {
 
 	}
 
-	/**
-	 * This method is used to generate the refresh token with expiry date and time
-	 * 
+	/**This method is used to generate the refresh token with expiry date and time
 	 * @param tokenGenerationRequest
 	 * @return String
 	 */
@@ -79,25 +77,22 @@ public class JwtUtil {
 		}
 	}
 
-	/**
-	 * This method is used to get the token details based on unique id and token and
+	/**This method is used to get the token details based on unique id and token and
 	 * also checking the token is expiry or not
-	 * 
 	 * @param accessToken
 	 * @param uniqueId
 	 * @param secretKey
 	 * @return boolean
 	 */
-	public boolean isValidAccessToken(String accessToken, String uniqueId, String secretKey) {
+	private boolean isValidUser(String uniqueId,String token) {
 		logger.info("Received the request to validate the access token is expired or not");
-		boolean isAccessTokenValid = false;
 		try {
 			logger.info("Received the request to get the token details based on uniqueId and access token");
 			TokenDetails existingTokenDetails = tokenDetailsRepository.findByUniqueIdAndAccessToken(uniqueId,
-					accessToken);
+					                  token);
 			if (Objects.nonNull(existingTokenDetails)) {
-				logger.info("Check the expiration for access token");
-				isAccessTokenValid=isAccessTokenExpired(secretKey, existingTokenDetails);
+				logger.info("Valid user and Token");
+				return true;
 			} else {
 				logger.error("Invalid User and Token");
 				return false;
@@ -106,26 +101,64 @@ public class JwtUtil {
 			logger.error("Unable to validate access token");
 			throw new CustomJwtException("Unable to validate access token");
 		}
-		return isAccessTokenValid;
 	}
 
-	/**
-	 * This method is used to check the access token is expired or not
-	 * 
+	/**This method is used to check the access token is expired or not
 	 * @param secretKey
 	 * @param existingTokenDetails
 	 * @return String
 	 */
-	public boolean isAccessTokenExpired(String secretKey, TokenDetails existingTokenDetails) {
+	private boolean isTokenExpired(String secretKey, String token) {
 		logger.info("Received the request to validate the access token");
 		try {
-			Jwts.parser().setSigningKey(secretKey).parseClaimsJws(existingTokenDetails.getAccessToken()).getBody();
-			logger.info("Access token is not expired");
+			Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+			logger.info("Token is not expired");
 			return true;
 		} catch (ExpiredJwtException expiredJwtException) {
-			logger.error("Access token is expired");
+			logger.error("Token is expired");
+			return false;
+		}
+	}
+	
+	/**This method is used to validate the accesstoken and user
+	 * @param tokenValidationRequest
+	 * @return boolean
+	 */
+	public boolean validateToken(TokenValidationRequest tokenValidationRequest) {
+		logger.info("Received request to validate the user and access token");
+		try {
+			boolean isValidUser = isValidUser(tokenValidationRequest.getUniqueId(),
+					tokenValidationRequest.getAccessToken());
+			boolean isTokenExpired = isTokenExpired(tokenValidationRequest.getSecretKey(),
+					tokenValidationRequest.getAccessToken());
+			logger.info("User and token validation is successfully acheived");
+			return isValidUser && isTokenExpired;
+		} catch (Exception e) {
+			logger.error("Unable to validate the user and token details");
 			return false;
 		}
 	}
 
+	/**This method is used to valid the user and refresh token
+	 * @param refreshTokenRequest
+	 * @return boolean
+	 */
+	public boolean validateUserAndRefreshToken(RefreshTokenRequest refreshTokenRequest) {
+		logger.info("Received request to validate the user and refresh token");
+		try {
+			boolean isValidUser = isValidUser(refreshTokenRequest.getUniqueId(),refreshTokenRequest.getRefreshToken());
+			if (isValidUser) {
+				isTokenExpired(refreshTokenRequest.getSecretKey(), refreshTokenRequest.getRefreshToken());
+				logger.info("Valid User and Token");
+				return true;
+			}else {
+				logger.error("Invalid User and Token");
+				return false;
+			}
+		} catch (Exception e) {
+			logger.error("Unable to validate the token and user");
+			return false;
+		}	
+	}
+	
 }
