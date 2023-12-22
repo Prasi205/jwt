@@ -8,8 +8,6 @@ public interface TokenDetailsRepository extends JpaRepository<TokenDetails, Inte
 	
 	TokenDetails findByUniqueId(String uniqueId);
 	
-	TokenDetails findByUniqueIdAndAccessToken(String uniqueId, String accessToken);
-	
-	TokenDetails findByUniqueIdAndRefreshToken(String uniqueId, String refreshToken);
+	TokenDetails findByUniqueIdAndAccessToken(String uniqueId, String token);
 
 }

@@ -149,10 +149,10 @@ public class JwtUtil {
 			boolean isValidUser = isValidUser(refreshTokenRequest.getUniqueId(),refreshTokenRequest.getRefreshToken());
 			if (isValidUser) {
 				isTokenExpired(refreshTokenRequest.getSecretKey(), refreshTokenRequest.getRefreshToken());
-				logger.info("Valid User and Token");
+				logger.info("Valid User and refresh Token");
 				return true;
 			}else {
-				logger.error("Invalid User and Token");
+				logger.error("Invalid User and refresh Token");
 				return false;
 			}
 		} catch (Exception e) {

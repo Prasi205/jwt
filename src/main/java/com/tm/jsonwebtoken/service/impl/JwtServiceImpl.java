@@ -165,8 +165,8 @@ public class JwtServiceImpl implements JwtService {
 				refreshTokenResponse.setAccessToken(generateToken.getAccessToken());
 				refreshTokenResponse.setRefreshToken(generateToken.getRefreshToken());
 			} else {
-				logger.error("Invalid user and Token");
-				throw new CustomJwtException("Invalid user and Token");
+				logger.error("Invalid user and refresh Token");
+				throw new CustomJwtException("Invalid user and refresh Token");
 			}
 		} catch (Exception e) {
 			logger.error("Error refreshing token");
